@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+from fetchmseval.fetchmseval import fetch, fetch_download_urls, fetch_products
+from fetchmseval.product import to_dict as product_to_dict, from_dict as product_from_dict, print_products, products_list
+from fetchmseval.download import print_formats, formats_list
+from fetchmseval.cli.list import cli_list
+from fetchmseval.cli.list_formats import cli_list_formats
+from fetchmseval.cli.download import cli_download
+import argparse
+
+
+parser = argparse.ArgumentParser(
+    prog="fetch",
+    description="Fetch evaluation ISO/VHD files from MS eval center.")
+
+parser.add_argument(
+    "--cache", default=True, action=argparse.BooleanOptionalAction, help="use --no-cache to skip and refresh the cache ($TEMP_DIR/__fetchmseval.cache.json)")
+
+subparsers = parser.add_subparsers(dest="command")
+list_subparser = subparsers.add_parser(
+    'list', help='List products available for evaluation')
+list_subparser.set_defaults(func=cli_list)
+
+format_subparser = subparsers.add_parser(
+    'list-formats', help="List available file formats and languages for a product")
+format_subparser.add_argument(
+    "product_id", type=int, help="Product to show formats for")
+format_subparser.set_defaults(func=cli_list_formats)
+
+download_subparser = subparsers.add_parser(
+    'download', help="Download an evaluation product")
+download_subparser.add_argument("product_id", type=int)
+download_subparser.add_argument("format")
+download_subparser.add_argument("language", nargs='?', default="")
+download_subparser.add_argument(
+    "--resume",
+    default=True,
+    action=argparse.BooleanOptionalAction,
+    help="use --no-resume to not try to resume an interrupted download")
+download_subparser.set_defaults(func=cli_download)
+
+
+args = parser.parse_args()
+if not args.command:
+    parser.parse_args(["--help"])
+    sys.exit(0)
+
+args.func(args)
